@@ -24,7 +24,7 @@
 <div class="nav"><button class="active" data-view="overview">Overview</button><button data-view="headcount">Headcount</button><button data-view="people">People</button><button data-view="leave">Leave</button><button data-view="offboarding">Offboarding</button><button data-view="actions">HR Action</button></div>
 <div id="overview" class="view active">
 <div class="notice"><span>●</span><div><b>9월 Actual HC는 아직 월말 확정 전입니다.</b> 현재 최신 확정치는 8월 말 296명입니다. 9월 진행 파일에는 311명의 ongoing 데이터가 있으나, 월말 Actual HC로 확정하지 않았습니다.</div></div>
-<div class="kpis"><div class="card kpi"><div class="klabel">LATEST ACTUAL HC</div><div class="kvalue">296</div><div class="delta down">−8 vs Jul</div></div><div class="card kpi"><div class="klabel">CURRENT ACTIVE</div><div class="kvalue">276</div><div class="delta">HR master status</div></div><div class="card kpi"><div class="klabel">ON LEAVE</div><div class="kvalue">9</div><div class="delta">휴직 / 장기휴가</div></div><div class="card kpi"><div class="klabel">UPCOMING LEAVER</div><div class="kvalue">4</div><div class="delta">퇴사예정</div></div><div class="card kpi"><div class="klabel">UPCOMING JOINER</div><div class="kvalue">1</div><div class="delta">입사예정</div></div><div class="card kpi"><div class="klabel">HR MANAGED</div><div class="kvalue">295</div><div class="delta">Active + Leave + planned</div></div></div>
+<div class="kpis"><div class="card kpi"><div class="klabel">LATEST ACTUAL HC</div><div class="kvalue"id="lastestActualHC">-</div><div class="delta down">−8 vs Jul</div></div><div class="card kpi"><div class="klabel">CURRENT ACTIVE</div><div class="kvalue">276</div><div class="delta">HR master status</div></div><div class="card kpi"><div class="klabel">ON LEAVE</div><div class="kvalue">9</div><div class="delta">휴직 / 장기휴가</div></div><div class="card kpi"><div class="klabel">UPCOMING LEAVER</div><div class="kvalue">4</div><div class="delta">퇴사예정</div></div><div class="card kpi"><div class="klabel">UPCOMING JOINER</div><div class="kvalue">1</div><div class="delta">입사예정</div></div><div class="card kpi"><div class="klabel">HR MANAGED</div><div class="kvalue">295</div><div class="delta">Active + Leave + planned</div></div></div>
 <div class="grid2"><div class="card panel"><div class="panelhead"><div><div class="ptitle">Monthly Actual HC</div><div class="pdesc">월말 확정 인원 · Finance 기준</div></div><span class="tag">2025.12 — 2026.08</span></div><div class="chart" id="hcChart"></div></div><div class="card panel"><div class="panelhead"><div><div class="ptitle">People Movement</div><div class="pdesc">현재 HR 관리 현황</div></div></div><div class="move"><div class="moveitem"><div class="mini">ACTIVE</div><div class="big">276</div></div><div class="moveitem"><div class="mini">ON LEAVE</div><div class="big">9</div></div><div class="moveitem"><div class="mini">LEAVER</div><div class="big">4</div></div><div class="moveitem"><div class="mini">JOINER</div><div class="big">1</div></div></div><div style="height:14px"></div><div class="mini">Latest confirmed HC</div><div style="font-size:26px;font-weight:750;margin-top:3px">296 <span class="mini">people</span></div></div></div>
 <div class="grid2"><div class="card panel"><div class="panelhead"><div><div class="ptitle">Organization HC</div><div class="pdesc">현재 HR Master · Division 기준</div></div><button onclick="show('people')">상세 보기</button></div><div class="bars" id="divBars"></div></div><div class="card panel"><div class="panelhead"><div><div class="ptitle">Leave Management</div><div class="pdesc">현재 휴직/복직 상태</div></div><button onclick="show('leave')">관리 보기</button></div><div class="bars" id="leaveBars"></div></div></div>
 <div class="grid2"><div class="card panel"><div class="panelhead"><div><div class="ptitle">September Ongoing Snapshot</div><div class="pdesc">9월 진행 파일 · 월말 Actual HC 아님</div></div><span class="tag">311 records</span></div><div class="bars" id="ccBars"></div></div><div class="card panel"><div class="panelhead"><div><div class="ptitle">HR Action Items</div><div class="pdesc">아침에 먼저 확인할 업무</div></div><button onclick="show('actions')">전체 보기</button></div><div class="action"><span>퇴사 예정자 4명 후속관리</span><span class="tag">HIGH</span></div><div class="action"><span>복직 예정 2명 일정 확인</span><span class="tag">MED</span></div><div class="action"><span>9월 말 Actual HC 확정</span><span class="tag">MONTH-END</span></div><div class="action"><span>퇴직면담 DB 업데이트 확인</span><span class="tag">DATA</span></div></div></div>
@@ -52,11 +52,18 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxs_xZ6OfEgImQGdKMld8XR
 fetch(API_URL)
   .then(response => response.json())
   .then(data => {
+
     console.log("Google Sheets 연결 성공!");
     console.log(data);
+
+    const currentHC = data.currentHC;
+
+    document.getElementById("latestActualHC").textContent =
+      currentHC["현재 인원"];
+
   })
   .catch(error => {
-    console.error("Google Sheets 연결 실패:", error);
-  });
 
-</script>
+    console.error("Google Sheets 연결 실패:", error);
+
+  });
