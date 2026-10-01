@@ -38,6 +38,7 @@
 <script>
 const D={"monthly": [{"m": "2025.12", "hc": 430}, {"m": "2026.01", "hc": 431}, {"m": "2026.02", "hc": 436}, {"m": "2026.03", "hc": 448}, {"m": "2026.04", "hc": 447}, {"m": "2026.05", "hc": 367}, {"m": "2026.06", "hc": 313}, {"m": "2026.07", "hc": 304}, {"m": "2026.08", "hc": 296}], "current": {"active": 276, "leave": 9, "leaver": 4, "joiner": 1, "managed": 295}, "division": {"Art실": 93, "OTPS": 30, "QA": 23, "ZERO": 21, "MAZE": 21, "KongPlay": 19, "HERO": 19, "Publishing": 16, "People": 13, "Server": 10, "GDTS": 9, "Finance": 7}, "cc": {"Art실": 97, "OTPS": 31, "MAZE": 27, "Staff": 27, "QA": 23, "ZERO": 21, "HERO": 19, "Publishing": 16, "KongPlay": 14, "Server": 10}, "leave": {"휴직": 9, "복직": 9, "휴직예정": 2}, "lastConfirmed": "2026.08.31", "ongoingSep": 311, "exitInterview": 1};
 function login(){const p=document.getElementById('pw').value;if(p.length<4){alert('Password를 입력해주세요.');return}document.getElementById('login').style.display='none';}
+document.getElementById('loginButton').addEventListener('click', login);
 document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 function show(id){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===id));window.scrollTo({top:0,behavior:'smooth'})}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>show(b.dataset.view));
