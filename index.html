@@ -46,9 +46,6 @@ bars('divBars',D.division);bars('peopleBars',D.division);bars('ccBars',D.cc);bar
 function chart(){const el=document.getElementById('hcChart'),W=760,H=250,p={l:36,r:16,t:12,b:32},a=D.monthly, max=470,min=280;const x=i=>p.l+i*(W-p.l-p.r)/(a.length-1),y=v=>p.t+(max-v)*(H-p.t-p.b)/(max-min);let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly Actual HC chart">`;[300,350,400,450].forEach(v=>s+=`<line class="axis" x1="${p.l}" x2="${W-p.r}" y1="${y(v)}" y2="${y(v)}"/><text class="label" x="2" y="${y(v)+4}">${v}</text>`);s+=`<polyline class="line" points="${a.map((d,i)=>x(i)+','+y(d.hc)).join(' ')}"/>`;a.forEach((d,i)=>s+=`<circle class="dot" cx="${x(i)}" cy="${y(d.hc)}" r="4"/><text class="value" text-anchor="middle" x="${x(i)}" y="${y(d.hc)-10}">${d.hc}</text><text class="label" text-anchor="middle" x="${x(i)}" y="${H-8}">${d.m.slice(5)}</text>`);s+='</svg>';el.innerHTML=s}
 chart();
 const tbody=document.getElementById('hcTable');tbody.innerHTML=D.monthly.map((d,i)=>{const prev=i?D.monthly[i-1].hc:null;const diff=prev===null?null:d.hc-prev;const pct=prev===null?null:diff/prev*100;return `<tr><td>${d.m}</td><td class="right"><b>${d.hc}</b></td><td class="right">${diff===null?'—':(diff>0?'+':'')+diff}</td><td class="right">${pct===null?'—':(pct>0?'+':'')+pct.toFixed(1)+'%'}</td></tr>`}).join('');
-
-const API_URL = "https://script.google.com/macros/s/AKfycbxs_xZ6OfEgImQGdKMld8XRI7ra2RSd_AOR68C_xkhhjWVfSXxXC8X3mW5xi6UqO-mw/exec";
-
 /*
 const API_URL = "https://script.google.com/macros/s/AKfycbxs_xZ6OfEgImQGdKMld8XRI7ra2RSd_AOR68C_xkhhjWVfSXxXC8X3mW5xi6UqO-mw/exec";
 
