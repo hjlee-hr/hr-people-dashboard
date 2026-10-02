@@ -69,6 +69,257 @@ fetch(API_URL)
 
   });
 */
-</script>
-</body>
-</html>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbxs_xZ6OfEgImQGdKMld8XRI7ra2RSd_AOR68C_xkhhjWVfSXxXC8X3mW5xi6UqO-mw/exec";
+
+// 로그인
+function login() {
+  const p = document.getElementById("pw").value;
+  if (p.length < 4) {
+    alert("Password를 입력해주세요.");
+    return;
+  }
+  document.getElementById("login").style.display = "none";
+}
+document.getElementById("loginButton").addEventListener("click", login);
+document.getElementById("pw").addEventListener("keydown", e => {
+  if (e.key === "Enter") login();
+});
+
+// 화면 이동
+function show(id) {
+  document.querySelectorAll(".view").forEach(x => x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".nav button").forEach(x =>
+    x.classList.toggle("active", x.dataset.view === id)
+  );
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+document.querySelectorAll(".nav button").forEach(b => {
+  b.onclick = () => show(b.dataset.view);
+});
+
+// 공통 함수
+function getValue(obj, keys, fallback = 0) {
+  for (const key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
+      return obj[key];
+    }
+  }
+  return fallback;
+}
+
+function toNumber(value) {
+  const n = Number(String(value).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatNumber(value) {
+  return toNumber(value).toLocaleString("ko-KR");
+}
+
+// 막대 차트
+function bars(elId, obj) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+
+  const entries = Object.entries(obj || {})
+    .filter(([k, v]) => k && toNumber(v) > 0);
+
+  if (!entries.length) {
+    el.innerHTML = '<div class="mini">표시할 데이터가 없습니다.</div>';
+    return;
+  }
+
+  const max = Math.max(...entries.map(([, v]) => toNumber(v)));
+
+  el.innerHTML = entries
+    .sort((a, b) => toNumber(b[1]) - toNumber(a[1]))
+    .map(([k, v]) => `
+      <div class="barrow">
+        <span>${k}</span>
+        <div class="track">
+          <div class="fill" style="width:${toNumber(v) / max * 100}%"></div>
+        </div>
+        <span class="num">${formatNumber(v)}</span>
+      </div>
+    `).join("");
+}
+
+// 월별 인원 차트
+function renderChart(monthly) {
+  const el = document.getElementById("hcChart");
+  if (!el) return;
+
+  const data = monthly.filter(d =>
+    toNumber(d.actual_hc) > 0 &&
+    (!d.snapshot_status || d.snapshot_status === "Confirmed")
+  );
+
+  if (!data.length) {
+    el.innerHTML = '<div class="mini">확정된 월별 데이터가 없습니다.</div>';
+    return;
+  }
+
+  const W = 760, H = 250;
+  const p = { l: 40, r: 16, t: 15, b: 32 };
+  const values = data.map(d => toNumber(d.actual_hc));
+  const min = Math.floor(Math.min(...values) / 50) * 50 - 20;
+  const max = Math.ceil(Math.max(...values) / 50) * 50 + 20;
+
+  const x = i => p.l + i * (W - p.l - p.r) / Math.max(data.length - 1, 1);
+  const y = v => p.t + (max - v) * (H - p.t - p.b) / (max - min || 1);
+
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly Actual HC chart">`;
+
+  for (let v = Math.ceil(min / 50) * 50; v <= max; v += 50) {
+    s += `<line class="axis" x1="${p.l}" x2="${W-p.r}" y1="${y(v)}" y2="${y(v)}"/>`;
+    s += `<text class="label" x="2" y="${y(v)+4}">${v}</text>`;
+  }
+
+  if (data.length > 1) {
+    s += `<polyline class="line" points="${data.map((d, i) =>
+      `${x(i)},${y(toNumber(d.actual_hc))}`
+    ).join(" ")}"/>`;
+  }
+
+  data.forEach((d, i) => {
+    const value = toNumber(d.actual_hc);
+    s += `<circle class="dot" cx="${x(i)}" cy="${y(value)}" r="4"/>`;
+    s += `<text class="value" text-anchor="middle" x="${x(i)}" y="${y(value)-10}">${value}</text>`;
+    s += `<text class="label" text-anchor="middle" x="${x(i)}" y="${H-8}">${String(d["기준월"] || "").slice(5)}</text>`;
+  });
+
+  s += "</svg>";
+  el.innerHTML = s;
+}
+
+// 월별 인원 표
+function renderHCTable(monthly) {
+  const tbody = document.getElementById("hcTable");
+  if (!tbody) return;
+
+  const data = monthly.filter(d =>
+    toNumber(d.actual_hc) > 0 &&
+    (!d.snapshot_status || d.snapshot_status === "Confirmed")
+  );
+
+  tbody.innerHTML = data.map((d, i) => {
+    const prev = i > 0 ? toNumber(data[i - 1].actual_hc) : null;
+    const value = toNumber(d.actual_hc);
+    const diff = prev === null ? null : value - prev;
+    const pct = prev === null || prev === 0 ? null : diff / prev * 100;
+
+    return `
+      <tr>
+        <td>${d["기준월"] || "-"}</td>
+        <td class="right"><b>${formatNumber(value)}</b></td>
+        <td class="right">${diff === null ? "—" : (diff > 0 ? "+" : "") + diff}</td>
+        <td class="right">${pct === null ? "—" : (pct > 0 ? "+" : "") + pct.toFixed(1) + "%"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// 현재 인원 카드
+function renderCurrent(current) {
+  const active = toNumber(getValue(current, ["재직자", "재직 인원", "active"]));
+  const leave = toNumber(getValue(current, ["휴직자", "휴직 인원", "leave"]));
+  const leaver = toNumber(getValue(current, ["퇴사예정자", "퇴사예정 인원", "leaver"]));
+  const joiner = toNumber(getValue(current, ["입사예정자", "입사예정 인원", "joiner"]));
+  const total = toNumber(getValue(current, ["현재 인원", "관리 인원", "managed"], active + leave + leaver + joiner));
+  const month = getValue(current, ["기준월"], "");
+
+  const kpis = document.querySelectorAll("#overview .kpi .kvalue");
+  const values = [total, active, leave, leaver, joiner, total];
+
+  kpis.forEach((el, i) => {
+    if (values[i] !== undefined) el.textContent = formatNumber(values[i]);
+  });
+
+  // People Overview 숫자
+  const peopleValues = document.querySelectorAll("#people .moveitem .big");
+  if (peopleValues.length >= 2) {
+    peopleValues[0].textContent = formatNumber(active);
+    peopleValues[1].textContent = formatNumber(leave);
+  }
+
+  // People Movement 숫자
+  const moveValues = document.querySelectorAll("#overview .moveitem .big");
+  [active, leave, leaver, joiner].forEach((v, i) => {
+    if (moveValues[i]) moveValues[i].textContent = formatNumber(v);
+  });
+
+  // 최신 확정치 표시
+  const latest = document.querySelector(".topright .badge");
+  if (latest && month) {
+    latest.textContent = `Current HR data · ${month}`;
+  }
+
+  const confirmed = document.querySelector("#overview .grid2 .moveitem");
+  const latestHC = document.querySelector("#overview .grid2 .mini");
+  const latestNumber = document.querySelector("#overview .grid2 div[style*='font-size:26px']");
+  if (latestNumber) {
+    latestNumber.innerHTML = `${formatNumber(total)} <span class="mini">people</span>`;
+  }
+}
+
+// 조직별 인원 집계
+function renderOrganization(rows) {
+  const divisions = {};
+
+  (rows || []).forEach(row => {
+    const division = row.Division || "미분류";
+    const hc = toNumber(row.HC);
+    divisions[division] = (divisions[division] || 0) + hc;
+  });
+
+  bars("divBars", divisions);
+  bars("peopleBars", divisions);
+}
+
+// API 연결
+async function loadDashboardData() {
+  try {
+    const response = await fetch(API_URL);
+    if (!response.ok) throw new Error(`HTTP 오류: ${response.status}`);
+
+    const data = await response.json();
+    if (!data.success) throw new Error("API 응답이 success=true가 아닙니다.");
+
+    console.log("Google Sheets 연결 성공", data);
+
+    renderCurrent(data.currentHC || {});
+
+    const monthly = data.monthlyHC || [];
+    renderChart(monthly);
+    renderHCTable(monthly);
+
+    renderOrganization(data.organizationHC || []);
+
+    // API에서 제공하지 않는 항목은 임의의 기존 샘플 수치를 유지하지 않음
+    const leave = toNumber(getValue(data.currentHC, ["휴직자", "휴직 인원", "leave"]));
+    bars("leaveBars", leave ? { "휴직": leave } : {});
+
+    const updated = document.querySelector(".topright span:last-child");
+    if (updated && data.updatedAt) {
+      const date = new Date(data.updatedAt);
+      if (!isNaN(date.getTime())) {
+        updated.textContent = "Updated " +
+          date.toLocaleString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+      }
+    }
+
+  } catch (error) {
+    console.error("Google Sheets 연결 실패:", error);
+    alert("대시보드 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+  }
+}
+
+loadDashboardData();
