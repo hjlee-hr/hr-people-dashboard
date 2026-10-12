@@ -87,20 +87,6 @@ fetch(API_URL)
 
 const API_URL = "https://script.google.com/macros/s/AKfycbxs_xZ6OfEgImQGdKMld8XRI7ra2RSd_AOR68C_xkhhjWVfSXxXC8X3mW5xi6UqO-mw/exec";
 
-// 로그인
-function login() {
-  const p = document.getElementById("pw").value;
-  if (p.length < 4) {
-    alert("Password를 입력해주세요.");
-    return;
-  }
-  document.getElementById("login").style.display = "none";
-}
-document.getElementById("loginButton").addEventListener("click", login);
-document.getElementById("pw").addEventListener("keydown", e => {
-  if (e.key === "Enter") login();
-});
-
 // 화면 이동
 function show(id) {
   document.querySelectorAll(".view").forEach(x => x.classList.remove("active"));
